@@ -1,5 +1,6 @@
 package com.example.demo.security;
 
+import com.example.demo.configurations.ApplicationContextProvider;
 import com.example.demo.exception.AuthenticationException;
 import io.jsonwebtoken.*;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,9 +10,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 
-final public class JwtUtility {
+public final class JwtUtility {
 
-    private static final String signingKey = "eee";
+    private static final String SIGNING_KEY = ApplicationContextProvider.getEnvironment().getProperty("signing.key");
 
     private JwtUtility() {
         throw new IllegalStateException();
@@ -35,7 +36,7 @@ final public class JwtUtility {
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt((Date) claims.get("issuedAt"))
                 .setExpiration((Date) claims.get("expiration"))
-                .signWith(SignatureAlgorithm.HS256, signingKey)
+                .signWith(SignatureAlgorithm.HS256, SIGNING_KEY)
                 .compact();
     }
 
@@ -55,7 +56,7 @@ final public class JwtUtility {
     private static Claims extractAllClaims(String token) {
         try {
             return Jwts.parser()
-                    .setSigningKey(signingKey)
+                    .setSigningKey(SIGNING_KEY)
                     .parseClaimsJws(token)
                     .getBody();
         } catch (SignatureException | MalformedJwtException | ExpiredJwtException | UnsupportedJwtException | IllegalArgumentException exception) {

@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public class AuthenticationException extends RuntimeException {
 
-    private String message;
+    private final String message;
 
     public AuthenticationException(String message) {
         super(message);

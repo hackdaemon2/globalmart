@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public class ResourceConflictException extends RuntimeException {
 
-    private String message;
+    private final String message;
 
     public ResourceConflictException(String message) {
         super(message);

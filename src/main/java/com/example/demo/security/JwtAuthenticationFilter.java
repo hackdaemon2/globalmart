@@ -11,6 +11,7 @@ import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -28,26 +29,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
-            if ("options".equals(request.getMethod().toLowerCase())) {
+            if ("options".equalsIgnoreCase(request.getMethod())) {
                 response.setHeader("", "");
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            var authorizationHeader = request.getHeader("Authorization");
+            String authorizationHeader = request.getHeader("Authorization");
 
             if (StringUtils.isEmpty(authorizationHeader) || !authorizationHeader.startsWith("Bearer")) {
                 throw new AuthenticationException("authorization header with bearer token is required");
             }
 
-            var jwtToken = authorizationHeader.substring(7);
+            String jwtToken = authorizationHeader.substring(7);
 
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                var userDetails = userDetailService.loadUserByUsername(JwtUtility.extractUsername(jwtToken));
-                var isValidToken = JwtUtility.isValidToken(jwtToken, userDetails);
+                UserDetails userDetails = userDetailService.loadUserByUsername(JwtUtility.extractUsername(jwtToken));
+                boolean isValidToken = JwtUtility.isValidToken(jwtToken, userDetails);
 
                 if (isValidToken) {
-                    var authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
@@ -56,7 +60,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } catch (AuthenticationException exception) {
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            var errorResponse = Map.of("responseCode", "01", "responseMessage", exception.getMessage());
+
+            Map<String, String> errorResponse = Map.of(
+                    "responseCode", "01",
+                    "responseMessage", exception.getMessage());
+
             response.getWriter().write(new JSONObject(errorResponse).toString());
         }
     }

@@ -33,13 +33,13 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@NotNull @PathVariable BigInteger id) {
+    public ResponseEntity<Void> deleteUser(@NotNull @PathVariable BigInteger id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getUser(@NotNull @PathVariable BigInteger id) {
+    public ResponseEntity<UserResponse> getUser(@NotNull @PathVariable BigInteger id) {
         return ResponseEntity.ok(userService.getUser(id));
     }
 

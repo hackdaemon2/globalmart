@@ -1,5 +1,6 @@
 package com.example.demo.services.impl;
 
+import com.example.demo.configurations.ApplicationContextProvider;
 import com.example.demo.enums.ResponseCodes;
 import com.example.demo.exception.AuthenticationException;
 import com.example.demo.exception.ResourceNotFoundException;
@@ -33,14 +34,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AuthResponse getAccessToken(AuthRequest authRequest) {
-        var userDetail = userDetailService.loadUserByUsername(authRequest.getUsername());
+        UserDetails userDetail = userDetailService.loadUserByUsername(authRequest.getUsername());
 
         if (!passwordEncoder.matches(authRequest.getPassword(), userDetail.getPassword())) {
             throw new AuthenticationException("invalid user credentials");
         }
 
-        var responseCodes = ResponseCodes.SUCCESS;
-        var accessTokenDTO = saveAuthenticationToken(userDetail);
+        ResponseCodes responseCodes = ResponseCodes.SUCCESS;
+        AccessTokenDTO accessTokenDTO = saveAuthenticationToken(userDetail);
 
         return new AuthResponse(
                 accessTokenDTO.getAccessToken(),
@@ -50,20 +51,28 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     private AccessTokenDTO saveAuthenticationToken(UserDetails userDetail) {
-        var issuedAt = new Date(System.currentTimeMillis());
-        var expiration = new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(5));
-        var refreshTokenLocalDateTime = expiration.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().plusMinutes(55L);
-        var refreshTokenExpiration = Date.from(refreshTokenLocalDateTime.atZone(ZoneId.systemDefault()).toInstant());
+        Date issuedAt = new Date(System.currentTimeMillis());
+        String tokenExpiry = ApplicationContextProvider.getEnvironment().getProperty("token.expiry");
+        Date expiration = new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(Long.parseLong(tokenExpiry != null ? tokenExpiry : "5")));
+        String refreshTokenExpiry = ApplicationContextProvider.getEnvironment().getProperty("refresh.token.expiry");
 
-        var claims = Map.of(
+        LocalDateTime refreshTokenLocalDateTime = expiration
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime()
+                .plusMinutes(Long.parseLong(refreshTokenExpiry != null ? refreshTokenExpiry : "55L"));
+
+        Date refreshTokenExpiration = Date.from(refreshTokenLocalDateTime.atZone(ZoneId.systemDefault()).toInstant());
+
+        Map<String, Object> claims = Map.of(
                 "issuedAt", issuedAt,
                 "expiration", expiration,
                 "authorities", userDetail.getAuthorities());
 
-        var accessToken = JwtUtility.generateToken(userDetail, claims);
-        var refreshToken = JwtUtility.generateRefreshToken();
+        String accessToken = JwtUtility.generateToken(userDetail, claims);
+        String refreshToken = JwtUtility.generateRefreshToken();
 
-        var accessTokenEntity = new AccessTokenEntity();
+        AccessTokenEntity accessTokenEntity = new AccessTokenEntity();
         accessTokenEntity.setAccessToken(accessToken);
         accessTokenEntity.setRefreshToken(refreshToken);
         accessTokenEntity.setExpiration(Timestamp.from(expiration.toInstant()));
@@ -76,9 +85,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AuthResponse getRefreshToken(String refreshToken) {
-        var accessTokenEntity = accessTokenRepository.findByRefreshToken(refreshToken).orElseThrow(() -> new ResourceNotFoundException("refresh token not found"));
-        var refreshTokenHasExpired = accessTokenEntity.getRefreshTokenExpiration().toLocalDateTime().isAfter(LocalDateTime.now());
-        var responseCodes = ResponseCodes.SUCCESS;
+        AccessTokenEntity accessTokenEntity = accessTokenRepository
+                .findByRefreshToken(refreshToken)
+                .orElseThrow(() -> new ResourceNotFoundException("refresh token not found"));
+
+        boolean refreshTokenHasExpired = accessTokenEntity
+                .getRefreshTokenExpiration()
+                .toLocalDateTime()
+                .isAfter(LocalDateTime.now());
+
+        ResponseCodes responseCodes = ResponseCodes.SUCCESS;
 
         if (refreshTokenHasExpired) {
             responseCodes = ResponseCodes.INVALID_REFRESH_TOKEN;
@@ -89,9 +105,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     responseCodes.getResponseMessage());
         }
 
-        var username = JwtUtility.extractUsername(accessTokenEntity.getAccessToken());
-        var userDetail = userDetailService.loadUserByUsername(username);
-        var accessTokenDTO = saveAuthenticationToken(userDetail);
+        String username = JwtUtility.extractUsername(accessTokenEntity.getAccessToken());
+        UserDetails userDetail = userDetailService.loadUserByUsername(username);
+        AccessTokenDTO accessTokenDTO = saveAuthenticationToken(userDetail);
 
         return new AuthResponse(
                 accessTokenDTO.getAccessToken(),

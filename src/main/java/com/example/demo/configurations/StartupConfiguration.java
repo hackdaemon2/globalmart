@@ -23,16 +23,16 @@ public class StartupConfiguration implements ApplicationListener<ContextRefreshe
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        var userExists = userRepository.findById(BigInteger.ONE).isPresent();
+        boolean userExists = userRepository.findById(BigInteger.ONE).isPresent();
 
         if (!userExists) {
-            var roles = new RoleEntity();
+            RoleEntity roles = new RoleEntity();
             roles.setName("ADMIN");
             roleRepository.save(roles);
 
-            var roleSet = Set.of(roles);
+            Set<RoleEntity> roleSet = Set.of(roles);
 
-            var user = new UserEntity();
+            UserEntity user = new UserEntity();
             user.setDeleted(false);
             user.setUsername("test");
             user.setPassword(passwordEncoder.encode("mayfay_2018@M2003"));

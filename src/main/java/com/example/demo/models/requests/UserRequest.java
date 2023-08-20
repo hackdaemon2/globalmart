@@ -6,7 +6,6 @@ import lombok.Getter;
 import org.json.JSONObject;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -58,7 +57,7 @@ public class UserRequest {
     @Size(message = "invalid length for lastName", min = 2, max = 255)
     private final String lastName;
 
-    private final List<BigInteger> roleIds = new ArrayList<>(1);
+    private final List<BigInteger> roleIds;
 
     @Override
     public String toString() {

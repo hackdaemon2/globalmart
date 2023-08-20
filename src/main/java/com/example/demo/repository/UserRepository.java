@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<UserEntity, BigInteger> {
 
-    @Query(value = "select u from UserEntity u where u.deleted = false")
+    @Query(value = "select u from UserEntity u where u.deleted = false and u.username = ?1")
     Optional<UserEntity> getUserDetails(String username);
 
     @Query(value = "select u from UserEntity u where u.deleted = false")

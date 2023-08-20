@@ -1,5 +1,6 @@
 package com.example.demo.configurations;
 
+import com.example.demo.exception.BadRequestException;
 import com.example.demo.exception.GenericApplicationException;
 import com.example.demo.exception.ResourceConflictException;
 import com.example.demo.exception.ResourceNotFoundException;
@@ -16,7 +17,7 @@ import java.util.Map;
 public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<Object> handleUsernameNotFoundException(UsernameNotFoundException exception) {
+    public ResponseEntity<Map<String, Object>> handleUsernameNotFoundException(UsernameNotFoundException exception) {
         return new ResponseEntity<>(formulateErrorResponse(exception.getMessage()), HttpStatus.UNAUTHORIZED);
     }
 
@@ -29,18 +30,23 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         return new ResponseEntity<>(formulateErrorResponse(exception.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<Map<String, Object>> handleGenericApplicationException(BadRequestException exception) {
+        return new ResponseEntity<>(formulateErrorResponse(exception.getMessage()), HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Object> handleResourceNotFoundException(ResourceNotFoundException exception) {
+    public ResponseEntity<Map<String, Object>> handleResourceNotFoundException(ResourceNotFoundException exception) {
         return new ResponseEntity<>(formulateErrorResponse(exception.getMessage()), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(ResourceConflictException.class)
-    public ResponseEntity<Object> handleResourceConflictException(ResourceConflictException exception) {
+    public ResponseEntity<Map<String, Object>> handleResourceConflictException(ResourceConflictException exception) {
         return new ResponseEntity<>(formulateErrorResponse(exception.getMessage()), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(NullPointerException.class)
-    public ResponseEntity<Object> handleNullPointerException(NullPointerException exception) {
+    public ResponseEntity<Map<String, Object>> handleNullPointerException(NullPointerException exception) {
         return new ResponseEntity<>(formulateErrorResponse(exception.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

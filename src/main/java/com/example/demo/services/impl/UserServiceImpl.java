@@ -5,6 +5,7 @@ import com.example.demo.enums.SortOrder;
 import com.example.demo.exception.ResourceConflictException;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.models.dto.UserDTO;
+import com.example.demo.models.entities.RoleEntity;
 import com.example.demo.models.entities.UserEntity;
 import com.example.demo.models.requests.UserRequest;
 import com.example.demo.models.responses.UserResponse;
@@ -13,16 +14,17 @@ import com.example.demo.repository.UserRepository;
 import com.example.demo.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.example.demo.models.constants.ApplicationConstants.USER_ACCOUNT_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -34,10 +36,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse createUser(UserRequest userRequest) {
-        userRepository.getUserDetails(userRequest.getUsername()).orElseThrow(() -> new ResourceConflictException("username already exists"));
+        Optional<UserEntity> userDetails = userRepository.getUserDetails(userRequest.getUsername());
 
-        var roles = roleRepository.findByIdInAndDeletedIsFalse(userRequest.getRoleIds());
-        var userEntity = new UserEntity();
+        userDetails.ifPresent(user -> {
+            throw new ResourceConflictException("username already exists");
+        });
+
+        Set<RoleEntity> roles = roleRepository.findByIdInAndDeletedIsFalse(userRequest.getRoleIds());
+        UserEntity userEntity = new UserEntity();
 
         userEntity.setUsername(userRequest.getUsername());
         userEntity.setEmail(userRequest.getEmail());
@@ -57,13 +63,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse updateUser(BigInteger id, UserRequest userRequest) {
-        var existingUserEntity = userRepository.findById(id).orElse(null);
-
-        if (Objects.isNull(existingUserEntity)) {
-            throw new ResourceNotFoundException("user account not found");
-        }
-
-        var roles = roleRepository.findByIdInAndDeletedIsFalse(userRequest.getRoleIds());
+        UserEntity existingUserEntity = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(USER_ACCOUNT_NOT_FOUND));
+        Set<RoleEntity> roles = roleRepository.findByIdInAndDeletedIsFalse(userRequest.getRoleIds());
 
         existingUserEntity.setFirstName(userRequest.getFirstName());
         existingUserEntity.setLastName(userRequest.getLastName());
@@ -73,41 +74,35 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(existingUserEntity);
 
-        var userDto = UserServiceUtility.mapToUserDTO(existingUserEntity);
-        var successResponses = ResponseCodes.SUCCESS;
+        UserDTO userDto = UserServiceUtility.mapToUserDTO(existingUserEntity);
+        ResponseCodes successResponses = ResponseCodes.SUCCESS;
 
         return UserServiceUtility.formulateUserResponse(successResponses, userDto);
     }
 
     @Override
     public UserResponse getUser(BigInteger id) {
-        var userEntity = userRepository.findById(id).orElse(null);
-
-        if (Objects.isNull(userEntity)) {
-            throw new ResourceNotFoundException("user account not found");
-        }
-
-        var userDto = UserServiceUtility.mapToUserDTO(userEntity);
-        var successResponses = ResponseCodes.SUCCESS;
-
+        UserEntity userEntity = userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(USER_ACCOUNT_NOT_FOUND));
+        UserDTO userDto = UserServiceUtility.mapToUserDTO(userEntity);
+        ResponseCodes successResponses = ResponseCodes.SUCCESS;
         return UserServiceUtility.formulateUserResponse(successResponses, userDto);
     }
 
     @Override
     public UserResponse getAllUser(BigInteger page, BigInteger size, String sortOrder) {
         try {
-            var sort = SortOrder.valueOf(sortOrder.toLowerCase());
-            var direction = Sort.Direction.DESC;
+            SortOrder sort = SortOrder.valueOf(sortOrder.toLowerCase());
+            Sort.Direction direction = Sort.Direction.DESC;
 
             if (sort == SortOrder.ASC) {
                 direction = Sort.Direction.ASC;
             }
 
-            var userPage = userRepository.findAll(PageRequest.of(page.intValue(), size.intValue(), direction, "dateCreated"));
-            var userList = userPage.getContent();
-            var userDTOList = userList.stream().map(UserServiceUtility::mapToUserDTO).collect(Collectors.toList());
-            var successResponses = ResponseCodes.SUCCESS;
-            var rowCount = Integer.parseInt(String.valueOf(userPage.getTotalElements()));
+            Page<UserEntity> userPage = userRepository.findAll(PageRequest.of(page.intValue(), size.intValue(), direction, "dateCreated"));
+            List<UserEntity> userList = userPage.getContent();
+            List<UserDTO> userDTOList = userList.stream().map(UserServiceUtility::mapToUserDTO).collect(Collectors.toList());
+            ResponseCodes successResponses = ResponseCodes.SUCCESS;
+            int rowCount = Integer.parseInt(String.valueOf(userPage.getTotalElements()));
             return UserServiceUtility.formulateUserResponse(successResponses, userDTOList, rowCount, page.intValue(), size.intValue());
         } catch (IllegalArgumentException exception) {
             return UserServiceUtility.formulateUserResponse(ResponseCodes.FAILURE, null);
@@ -116,10 +111,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(BigInteger id) {
-        var userEntity = userRepository.findById(id).orElse(null);
+        UserEntity userEntity = userRepository.findById(id).orElse(null);
 
         if (Objects.isNull(userEntity)) {
-            throw new ResourceNotFoundException("user account not found");
+            throw new ResourceNotFoundException(USER_ACCOUNT_NOT_FOUND);
         }
 
         userEntity.setDeleted(true);

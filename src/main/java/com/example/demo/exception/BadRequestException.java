@@ -3,11 +3,11 @@ package com.example.demo.exception;
 import lombok.Getter;
 
 @Getter
-public class GenericApplicationException extends RuntimeException {
+public class BadRequestException extends RuntimeException {
 
     private final String message;
 
-    public GenericApplicationException(String message) {
+    public BadRequestException(String message) {
         super(message);
         this.message = message;
     }
