@@ -1,0 +1,15 @@
+package com.globalmart.app.models.responses;
+
+import org.json.JSONObject;
+
+public record AuthResponse(String accessToken,
+                           String refreshToken,
+                           String responseCode,
+                           String responseMessage) {
+
+    @Override
+    public String toString() {
+        return new JSONObject(this).toString();
+    }
+
+}
