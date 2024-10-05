@@ -2,6 +2,7 @@ package com.globalmart.app.services;
 
 import com.globalmart.app.dto.OrderDTO;
 import com.globalmart.app.dto.OrderFilterDTO;
+import com.globalmart.app.enums.SortOrder;
 import com.globalmart.app.models.requests.OrderRequest;
 import com.globalmart.app.models.responses.AppResponse;
 
@@ -11,7 +12,7 @@ public interface OrderService {
 
     AppResponse<OrderDTO> createOrder(OrderRequest order);
 
-    AppResponse<List<OrderDTO>> getAllOrders(long page, long size, String sortOrder, OrderFilterDTO filter);
+    AppResponse<List<OrderDTO>> getAllOrders(long page, long size, SortOrder sortOrder, OrderFilterDTO filter);
 
     AppResponse<OrderDTO> updateOrder(String id, OrderRequest order);
 

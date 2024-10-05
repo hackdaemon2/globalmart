@@ -7,7 +7,6 @@ import jakarta.persistence.criteria.Root;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 public final class SpecificationUtility {
@@ -24,22 +23,15 @@ public final class SpecificationUtility {
         return predicate;
     }
 
-    public static <E> Predicate addDateFilter(String startDate, String stopDate, CriteriaBuilder criteriaBuilder,
-                                              Predicate predicate, Root<E> root) {
-        if (startDate != null && !startDate.isEmpty() && stopDate != null && !stopDate.isEmpty()) {
-            LocalDateTime startDateLdt = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-            LocalDateTime stopDateLdt = LocalDateTime.parse(stopDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-
-            if (startDateLdt.isAfter(stopDateLdt)) {
-                throw new IllegalArgumentException("Start date must not be after stop date.");
-            }
-
-            Date start = Date.from(startDateLdt.atZone(ZoneId.systemDefault()).toInstant());
-            Date stop = Date.from(stopDateLdt.atZone(ZoneId.systemDefault()).toInstant());
-            predicate = criteriaBuilder.and(predicate, criteriaBuilder.greaterThanOrEqualTo(root.get("dateCreated"), start));
-            predicate = criteriaBuilder.and(predicate, criteriaBuilder.lessThanOrEqualTo(root.get("dateCreated"), stop));
+    public static <E> Predicate addDateFilter(LocalDateTime startDate, LocalDateTime stopDate,
+                                              CriteriaBuilder criteriaBuilder, Predicate predicate, Root<E> root) {
+        if (startDate.isAfter(stopDate)) {
+            throw new IllegalArgumentException("Start date must not be after stop date.");
         }
-
+        Date start = Date.from(startDate.atZone(ZoneId.systemDefault()).toInstant());
+        Date stop = Date.from(stopDate.atZone(ZoneId.systemDefault()).toInstant());
+        predicate = criteriaBuilder.and(predicate, criteriaBuilder.greaterThanOrEqualTo(root.get("dateCreated"), start));
+        predicate = criteriaBuilder.and(predicate, criteriaBuilder.lessThanOrEqualTo(root.get("dateCreated"), stop));
         return predicate;
     }
 

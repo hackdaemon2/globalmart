@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+import static com.globalmart.app.models.constants.ApplicationConstants.ADMIN;
+
 @Service
 @RequiredArgsConstructor
 public class UserSecurityServiceImpl implements UserSecurityService {
@@ -63,7 +65,8 @@ public class UserSecurityServiceImpl implements UserSecurityService {
                        .flatMap(userRepository::findByUsername)
                        .map(user -> user.getRoles()
                                         .stream()
-                                        .anyMatch(roles -> roles.getName().equals("ADMIN")))
+                                        .anyMatch(roles -> roles.getName()
+                                                                .equals(ADMIN)))
                        .isPresent();
     }
 

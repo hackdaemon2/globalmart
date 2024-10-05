@@ -71,6 +71,7 @@ public class UserEntity extends AbstractEntity {
                 .put("firstName", firstName)
                 .put("lastName", lastName)
                 .put("username", username)
+                .put("phone", phone)
                 .put("email", email).toString();
     }
 

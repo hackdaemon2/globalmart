@@ -4,6 +4,7 @@ import com.globalmart.app.dto.UserDTO;
 import com.globalmart.app.dto.UserFilterDTO;
 import com.globalmart.app.entity.UserEntity;
 import com.globalmart.app.enums.ResponseCodes;
+import com.globalmart.app.enums.SortOrder;
 import com.globalmart.app.exception.ResourceConflictException;
 import com.globalmart.app.exception.ResourceNotFoundException;
 import com.globalmart.app.models.requests.UserRequest;
@@ -74,13 +75,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Cacheable(value = "users", key = "'all'")
-    public AppResponse<List<UserDTO>> getAllUser(long page, long size, String sortOrder,
+    public AppResponse<List<UserDTO>> getAllUser(long page, long size, SortOrder sortOrder,
                                                  UserFilterDTO userFilterDTO) {
         Pageable pageable = PageRequest.of(
                 (int) page,
                 (int) size,
-                Sort.Direction.fromString(sortOrder),
-                "date_created");
+                Sort.Direction.fromString(sortOrder.toString().toUpperCase()),
+                DATE_CREATED);
         Page<UserEntity> userPage = userRepository.findAll(UserSpecification.withFilters(userFilterDTO), pageable);
         List<UserDTO> userDTOList = userPage.stream()
                                             .map(user -> GenericUtil.mapToDTO(user, UserDTO.class))

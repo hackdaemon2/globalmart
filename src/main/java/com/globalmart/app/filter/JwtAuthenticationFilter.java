@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -28,8 +29,18 @@ import static com.globalmart.app.models.constants.ApplicationConstants.TOKEN_BEG
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtUtility jwtUtility;
-    private final CustomUserDetailService userDetailService;
+    private JwtUtility jwtUtility;
+    private CustomUserDetailService userDetailService;
+
+    @Autowired
+    public void setJwtUtility(JwtUtility jwtUtility) {
+        this.jwtUtility = jwtUtility;
+    }
+
+    @Autowired
+    public void setUserDetailService(CustomUserDetailService userDetailService) {
+        this.userDetailService = userDetailService;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,

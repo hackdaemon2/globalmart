@@ -9,6 +9,8 @@ public abstract class ApplicationConstants {
 
     public static final int TOKEN_BEGIN_INDEX = 7;
 
+    public static final String ADMIN = "ADMIN";
+    public static final String DATE_CREATED = "date_created";
     public static final String ORDER_NOT_FOUND = "order not found";
     public static final String USER_ACCOUNT_NOT_FOUND = "user account not found";
     public static final String USER_ACCOUNT_EXISTS = "user account already exists";

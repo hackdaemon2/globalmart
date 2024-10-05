@@ -2,6 +2,9 @@ package com.globalmart.app.dto;
 
 import lombok.Getter;
 import org.json.JSONObject;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDateTime;
 
 @Getter
 public record UserFilterDTO(String firstName,
@@ -9,8 +12,10 @@ public record UserFilterDTO(String firstName,
                             String username,
                             String email,
                             String phone,
-                            String startDate,
-                            String stopDate) {
+                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                            LocalDateTime startDate,
+                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+                            LocalDateTime stopDate) {
 
     @Override
     public String toString() {

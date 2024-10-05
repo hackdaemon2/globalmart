@@ -8,9 +8,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.time.format.DateTimeParseException;
+import java.util.Objects;
 
 @ControllerAdvice
 public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler {
@@ -20,6 +22,24 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
         return new ResponseEntity<>(formulateErrorResponse(exception.getMessage()), HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleEnumException(MethodArgumentTypeMismatchException ex) {
+        Class<?> requiredType = ex.getRequiredType();
+        switch (Objects.requireNonNull(requiredType).getSimpleName()) {
+            case "SortOrder":
+                return ResponseEntity.badRequest()
+                                     .body(formulateErrorResponse("Invalid sort order: %s".formatted(ex.getValue())));
+            case "LocalDateTime":
+                String invalidValue = ex.getValue() != null ? ex.getValue().toString() : "null";
+                String message = "Invalid date-time format: %s. Please use 'yyyy-MM-ddTHH:mm:ss' format.".formatted(invalidValue);
+                return ResponseEntity.badRequest()
+                                     .body(formulateErrorResponse(message));
+            default:
+                return ResponseEntity.badRequest()
+                                     .body(formulateErrorResponse("Invalid request parameter."));
+        }
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException exception) {
         return new ResponseEntity<>(formulateErrorResponse(exception.getMessage()), HttpStatus.FORBIDDEN);
@@ -27,12 +47,14 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
 
     @ExceptionHandler(GenericApplicationException.class)
     public ResponseEntity<ErrorResponse> handleGenericApplicationException(GenericApplicationException exception) {
-        return new ResponseEntity<>(formulateErrorResponse(exception.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.internalServerError()
+                             .body(formulateErrorResponse(exception.getMessage()));
     }
 
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErrorResponse> handleBadRequestException(BadRequestException exception) {
-        return new ResponseEntity<>(formulateErrorResponse(exception.getMessage()), HttpStatus.BAD_REQUEST);
+        return ResponseEntity.badRequest()
+                             .body(formulateErrorResponse(exception.getMessage()));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -47,22 +69,26 @@ public class ApplicationExceptionHandler extends ResponseEntityExceptionHandler 
 
     @ExceptionHandler(DateTimeParseException.class)
     public ResponseEntity<ErrorResponse> handleDateTimeParseException(DateTimeParseException exception) {
-        return new ResponseEntity<>(formulateErrorResponse(exception.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.internalServerError()
+                             .body(formulateErrorResponse(exception.getMessage()));
     }
 
     @ExceptionHandler(NullPointerException.class)
     public ResponseEntity<ErrorResponse> handleNullPointerException(NullPointerException exception) {
-        return new ResponseEntity<>(formulateErrorResponse(exception.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.internalServerError()
+                             .body(formulateErrorResponse(exception.getMessage()));
     }
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleIllegalStateException(IllegalStateException exception) {
-        return new ResponseEntity<>(formulateErrorResponse(exception.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.internalServerError()
+                             .body(formulateErrorResponse(exception.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException exception) {
-        return new ResponseEntity<>(formulateErrorResponse(exception.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        return ResponseEntity.internalServerError()
+                             .body(formulateErrorResponse(exception.getMessage()));
     }
 
     private static ErrorResponse formulateErrorResponse(String message) {

@@ -6,6 +6,7 @@ import com.globalmart.app.entity.OrderEntity;
 import com.globalmart.app.entity.ProductEntity;
 import com.globalmart.app.entity.UserEntity;
 import com.globalmart.app.enums.ResponseCodes;
+import com.globalmart.app.enums.SortOrder;
 import com.globalmart.app.exception.BadRequestException;
 import com.globalmart.app.exception.ResourceNotFoundException;
 import com.globalmart.app.models.requests.OrderRequest;
@@ -50,6 +51,8 @@ public class OrderServiceImpl implements OrderService {
                                                   .map(p -> productRepository.findByGuidAndDeletedIsFalse(p.guid())
                                                                              .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_NOT_FOUND)))
                                                   .collect(Collectors.toSet());
+        // validate status
+
         BigDecimal totalPrice = getTotalPrice(orderRequest);
         OrderEntity orderEntity = new OrderEntity();
         orderEntity.setStatus(orderRequest.status());
@@ -64,13 +67,13 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public AppResponse<List<OrderDTO>> getAllOrders(long page, long size, String sortOrder,
+    public AppResponse<List<OrderDTO>> getAllOrders(long page, long size, SortOrder sortOrder,
                                                     OrderFilterDTO orderFilterDTO) {
         Pageable pageable = PageRequest.of(
                 (int) page,
                 (int) size,
-                Sort.Direction.fromString(sortOrder),
-                "date_created");
+                Sort.Direction.fromString(sortOrder.name()),
+                DATE_CREATED);
         Page<OrderEntity> orderPage = orderRepository.findAll(OrderSpecification.withFilters(orderFilterDTO), pageable);
         List<OrderDTO> orderDTOList = orderPage.stream()
                                                .map(p -> GenericUtil.mapToDTO(p, OrderDTO.class))

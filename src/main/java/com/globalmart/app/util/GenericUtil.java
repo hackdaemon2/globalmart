@@ -16,16 +16,14 @@ public final class GenericUtil {
         throw new IllegalStateException(GenericUtil.class.getName());
     }
 
-    public static <T, R> R mapToEntity(T request, Class<R> entityClass,
-                                       BiConsumer<T, R> customMapping) {
+    public static <T, R> R mapToEntity(T request, Class<R> entityClass, BiConsumer<T, R> customMapping) {
         R entity = MODEL_MAPPER.map(request, entityClass);
         customMapping.accept(request, entity);
         return entity;
     }
 
     @Transactional
-    public static <P, R, D> R saveAndMapToDTO(P entity, Function<P, R> mapper,
-                                              SpecificationRepository<P, D> repository) {
+    public static <P, R, D> R saveAndMapToDTO(P entity, Function<P, R> mapper, SpecificationRepository<P, D> repository) {
         repository.save(entity);
         return mapper.apply(entity);
     }

@@ -50,7 +50,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String username = jwtUtility.extractUsername(accessTokenEntity.getAccessToken());
         UserDetails userDetail = userDetailService.loadUserByUsername(username);
         AccessTokenDTO accessTokenDTO = saveAuthenticationToken(userDetail);
-
         return new AuthResponse(
                 accessTokenDTO.accessToken(),
                 accessTokenDTO.refreshToken(),
@@ -68,7 +67,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         AccessTokenDTO accessTokenDTO = saveAuthenticationToken(userDetail);
         ResponseCodes responseCodes = ResponseCodes.SUCCESS;
-
         return new AuthResponse(
                 accessTokenDTO.accessToken(),
                 accessTokenDTO.refreshToken(),
@@ -92,7 +90,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 issuedAt,
                 expiration,
                 refreshTokenExpiration);
-
         accessTokenRepository.save(accessTokenEntity);
         return new AccessTokenDTO(accessToken, refreshToken);
     }

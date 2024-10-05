@@ -33,8 +33,8 @@ import static com.globalmart.app.models.constants.ApplicationConstants.*;
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
-    private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
 
     @Override
     public AppResponse<ProductDTO> createProduct(ProductRequest productRequest) {
@@ -77,8 +77,8 @@ public class ProductServiceImpl implements ProductService {
                                                        ProductFilterDTO productFilterDTO) {
         Pageable pageable = PageRequest.of((int) page,
                 (int) size,
-                Sort.Direction.fromString(sortOrder),
-                "date_created");
+                Sort.Direction.fromString(sortOrder.toUpperCase()),
+                DATE_CREATED);
         Page<ProductEntity> productPage = productRepository.findAll(ProductSpecification.withFilters(productFilterDTO), pageable);
         List<ProductDTO> productDTOList = productPage.stream()
                                                      .map(product -> GenericUtil.mapToDTO(product, ProductDTO.class))
@@ -102,8 +102,7 @@ public class ProductServiceImpl implements ProductService {
                          .orElseThrow(() -> new ResourceNotFoundException(PRODUCT_NOT_FOUND));
     }
 
-    private ProductEntity updateProductEntity(ProductEntity existingProductEntity,
-                                              ProductRequest productRequest) {
+    private ProductEntity updateProductEntity(ProductEntity existingProductEntity, ProductRequest productRequest) {
         MODEL_MAPPER.map(productRequest, existingProductEntity);
         existingProductEntity.setSeller(getSeller(productRequest.userID()));
         return existingProductEntity;
